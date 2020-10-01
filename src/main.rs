@@ -4,8 +4,8 @@ extern crate rand;
 
 use argparse::{ArgumentParser, Store};
 use bio::io::fastq;
-use rand::Rng;
-// use rand_xorshift::XorShiftRng;
+use rand::{Rng, SeedableRng, RngCore};
+use rand_xorshift::XorShiftRng;
 use std::fs::File;
 use std::io;
 
@@ -18,6 +18,8 @@ fn main() {
     let mut fhout;
     let mut stdout;
     let mut stdin;
+    let mut nonseedgen;
+    let mut seedgen: XorShiftRng;
 
     {
         let mut parser = ArgumentParser::new();
@@ -55,7 +57,17 @@ fn main() {
             &mut fhout
         }
     };
-    let mut rng = rand::thread_rng();
+    let rng: &mut dyn RngCore = match seed.as_str() {
+        "0" => {
+            nonseedgen = rand::thread_rng();
+            &mut nonseedgen
+        }
+        seedstr => {
+            let seednum: u64 = seedstr.parse().unwrap();
+            seedgen = SeedableRng::seed_from_u64(seednum);
+            &mut seedgen
+        }
+    };
     let size: usize = numreads.parse().unwrap();
     let mut reservoir: Vec<fastq::Record> = Vec::new();
     let reader = fastq::Reader::new(instream);
