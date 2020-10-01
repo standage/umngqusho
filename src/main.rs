@@ -102,7 +102,7 @@ fn main() {
         }
     }
     eprintln!(
-        "[umngqusho] Sampled {} reads from a total of {}",
+        "Sampled {} reads from a total of {}",
         reservoir.len(),
         count
     );
