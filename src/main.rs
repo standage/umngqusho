@@ -4,7 +4,7 @@ extern crate rand;
 
 use argparse::{ArgumentParser, Store};
 use bio::io::fastq;
-use rand::{Rng, SeedableRng, RngCore};
+use rand::{Rng, RngCore, SeedableRng};
 use rand_xorshift::XorShiftRng;
 use std::fs::File;
 use std::io;
@@ -23,17 +23,33 @@ fn main() {
 
     {
         let mut parser = ArgumentParser::new();
-        parser.refer(&mut outfile)
-            .add_option(&["-o", "--outfile"], Store, "output file")
+        parser
+            .refer(&mut outfile)
+            .add_option(
+                &["-o", "--outfile"],
+                Store,
+                "Write output to FILE; by default, output is written to the terminal (stdout)",
+            )
             .metavar("FILE");
-        parser.refer(&mut numreads)
-            .add_option(&["-n", "--num-reads"], Store, "number of sequences to sample")
+        parser
+            .refer(&mut numreads)
+            .add_option(
+                &["-n", "--num-reads"],
+                Store,
+                "Randomly sample N sequences from the input; by default N=500",
+            )
             .metavar("INT");
-        parser.refer(&mut seed)
-            .add_option(&["-s", "--seed"], Store, "seed for random number generator")
+        parser
+            .refer(&mut seed)
+            .add_option(
+                &["-s", "--seed"],
+                Store,
+                "Seed random number generator for reproducible behavior; by default, the RNG sets its own random state"
+            )
             .metavar("INT");
-        parser.refer(&mut infile)
-            .add_argument("seqs", Store, "sequences in Fastq format");
+        parser
+            .refer(&mut infile)
+            .add_argument("seqs", Store, "Sequences in Fastq format");
         parser.parse_args_or_exit();
     }
 
@@ -78,16 +94,21 @@ fn main() {
         count += 1;
         if reservoir.len() < size {
             reservoir.push(record);
-        }
-        else {
+        } else {
             let r = rng.gen_range(1, count);
             if r <= size {
                 reservoir[r - 1] = record;
             }
         }
     }
-    eprintln!("[umngqusho] Sampled {} reads from a total of {}", reservoir.len(), count);
+    eprintln!(
+        "[umngqusho] Sampled {} reads from a total of {}",
+        reservoir.len(),
+        count
+    );
     for record in reservoir.iter() {
-        writer.write_record(record).expect("Error writing Fastq record");
+        writer
+            .write_record(record)
+            .expect("Error writing Fastq record");
     }
 }
